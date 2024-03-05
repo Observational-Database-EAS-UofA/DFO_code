@@ -1,0 +1,4 @@
+env/
+ncfiles/
+__pycache__/
+.idea/
