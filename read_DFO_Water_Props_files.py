@@ -20,13 +20,15 @@ def get_max_len(data_list):
     return len(data_list[longest_list_index])
 
 
-def save_bot_files(data_path, save_path):
+def save_files(data_path, save_path, file_type):
     base_directory = os.getcwd()
     directory = data_path
     os.chdir(directory)
 
-    # files = [f for f in os.listdir() if (f.endswith('.ctd') and (('AT' not in f) and ('WC' not in f)))]
-    files = [f for f in os.listdir() if f.endswith('.che')]
+    if file_type == ".ctd":
+        files = [f for f in os.listdir() if (f.endswith('.ctd') and (('AT' not in f) and ('WC' not in f)))]
+    else:
+        files = [f for f in os.listdir() if f.endswith(file_type)]
 
     filename_list = []
     depth_list = []
@@ -42,8 +44,23 @@ def save_bot_files(data_path, save_path):
     lat_list = []
     start_time_list = []
 
+    netcdf_filename = ''
+
     for filename in files:
-        tempp = che_rd_DFO(filename)
+        tempp = None
+        match file_type:
+            case ".bot":
+                tempp = bot_rd_DFO(filename)
+                netcdf_filename = "DFO_2022_bottles_RAW.nc"
+            case ".ctd":
+                tempp = ctd_rd_DFO(filename)
+                netcdf_filename = "DFO_2022_ctd_RAW.nc"
+            case ".che":
+                tempp = che_rd_DFO(filename)
+                netcdf_filename = "DFO_2022_che_RAW.nc"
+            case _:
+                print("wrong file type")
+
         filename_list.append(tempp['filename'])
         depth_list.append(tempp['depth'])
         press_list.append(tempp['press'])
@@ -87,5 +104,5 @@ def save_bot_files(data_path, save_path):
 
     os.chdir(base_directory)
     os.chdir(save_path)
-
-    ds.to_netcdf("DFO_2022_bottles_RAW.nc")
+    ds.to_netcdf(netcdf_filename)
+    os.chdir(base_directory)

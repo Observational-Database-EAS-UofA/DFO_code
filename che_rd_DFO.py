@@ -1,32 +1,6 @@
 import numpy as np
 import pandas as pd
-
-
-def read_table_vertically(cnv_file, fid, m):
-    # get the header
-    with open(cnv_file, 'r', errors="ignore") as file:
-        content = file.readlines()
-    header_data_line = ''
-    i = m - 1
-    while not all(char in content[i] for char in "!1-"):
-        i -= 1
-        header_data_line = content[i]
-        header_data_line = header_data_line.lstrip("!")
-    file = fid.readlines()
-    split_items = [header_data_line.index(item) for item in header_data_line.split()]
-
-    d = []
-    for i in range(len(split_items)):
-        tmp = []
-        for li in file:
-            if i + 1 < len(split_items):
-                tmp.append(li[split_items[i]:split_items[i + 1]])
-            else:
-                tmp.append(li[split_items[i]:])
-        d.append(tmp)
-
-    print(pd.DataFrame.transpose(pd.DataFrame(d)))
-    return pd.DataFrame.transpose(pd.DataFrame(d))
+from shared.reader import read_table_vertically
 
 
 def che_rd_DFO(cnv_file, FMT='IR'):
@@ -155,6 +129,5 @@ def che_rd_DFO(cnv_file, FMT='IR'):
         lat=lat,
         start_time=start_time,
     )
-    # print(ctd)
 
     return ctd

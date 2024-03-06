@@ -8,18 +8,17 @@ import sys
 
 def runBOTFiles(data_path=None, save_path=None):
     # bot_rd_DFO("../original_data/1952-001-0059.bot")
-    save_bot_files(data_path, save_path)
+    save_files(data_path, save_path, ".bot")
 
 
 def runCTDFiles(data_path=None, save_path=None):
-    ctd_ctd = ctd_rd_DFO("../original_data/2007-020-0007.ctd")
-    print(ctd_ctd)
-    # save_bot_files(data_path, save_path)
+    # ctd_ctd = ctd_rd_DFO("../original_data/2007-020-0007.ctd")
+    save_files(data_path, save_path, ".ctd")
 
 
 def runCHEFiles(data_path=None, save_path=None):
     # print(che_rd_DFO(data_path))
-    save_bot_files(data_path, save_path)
+    save_files(data_path, save_path, ".che")
 
 
 def main():
@@ -43,6 +42,6 @@ def main():
 if __name__ == "__main__":
     # main()
     runCHEFiles("../original_data", "ncfiles")
-    # runCHEFiles("../original_data/1999-024-0030.che")
-    # read_file()
+    runCTDFiles("../original_data", "ncfiles")
+    runBOTFiles("../original_data", "ncfiles")
 
