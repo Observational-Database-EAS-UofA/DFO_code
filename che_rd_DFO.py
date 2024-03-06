@@ -1,5 +1,32 @@
+import numpy as np
 import pandas as pd
-import datetime
+
+
+def read_table_vertically(cnv_file, fid, m):
+    # get the header
+    with open(cnv_file, 'r', errors="ignore") as file:
+        content = file.readlines()
+    header_data_line = ''
+    i = m - 1
+    while not all(char in content[i] for char in "!1-"):
+        i -= 1
+        header_data_line = content[i]
+        header_data_line = header_data_line.lstrip("!")
+    file = fid.readlines()
+    split_items = [header_data_line.index(item) for item in header_data_line.split()]
+
+    d = []
+    for i in range(len(split_items)):
+        tmp = []
+        for li in file:
+            if i + 1 < len(split_items):
+                tmp.append(li[split_items[i]:split_items[i + 1]])
+            else:
+                tmp.append(li[split_items[i]:])
+        d.append(tmp)
+
+    print(pd.DataFrame.transpose(pd.DataFrame(d)))
+    return pd.DataFrame.transpose(pd.DataFrame(d))
 
 
 def che_rd_DFO(cnv_file, FMT='IR'):
@@ -83,38 +110,35 @@ def che_rd_DFO(cnv_file, FMT='IR'):
             elif 'START TIME' == first_of_line:
                 start_time = line[30:].strip()
 
-        data = []
-        while True:
-            line = fid.readline().strip()
-            if not line:
-                break
-            data.append(line.split())
+        # try:
+        #     data = pd.read_table(
+        #         cnv_file,
+        #         skiprows=m,
+        #         sep='\s+',
+        #         header=None,
+        #         encoding_errors='ignore',
+        #     )
+        #
+        #     if len(data.columns) != no_channels:
+        #         data = read_table_vertically(cnv_file, fid, m)
+        # except:
+        #     data = read_table_vertically(cnv_file, fid, m)
 
-        # data = pd.read_table(cnv_file, skiprows=m, sep='\s+', header=None, encoding_errors='ignore', encoding='utf-8')
+        data = read_table_vertically(cnv_file, fid, m)
 
         depth_list = []
         press_list = []
         temp_list = []
         sal_list = []
 
-        for row in data:
-            if depthvar is not None:
-                depth_list.append(row[depthvar])
-            if pressvar is not None:
-                press_list.append(row[pressvar])
-            if tempvar is not None:
-                temp_list.append(row[tempvar])
-            if salvar is not None:
-                sal_list.append(row[salvar])
-
-    # if depthvar is not None:
-    #     depth_list = data.iloc[:, depthvar].values
-    # if pressvar is not None:
-    #     press_list = data.iloc[:, pressvar].values
-    # if tempvar is not None:
-    #     temp_list = data.iloc[:, tempvar].values
-    # if salvar is not None:
-    #     sal_list = data.iloc[:, salvar].values
+        if depthvar is not None:
+            depth_list = list(map(float, data.iloc[:, depthvar].values))
+        if pressvar is not None:
+            press_list = list(map(float, data.iloc[:, pressvar].values))
+        if tempvar is not None:
+            temp_list = list(map(float, data.iloc[:, tempvar].values))
+        if salvar is not None:
+            sal_list = list(map(float, data.iloc[:, salvar].values))
 
     ctd = dict(
         filename=cnv_file,
@@ -131,4 +155,6 @@ def che_rd_DFO(cnv_file, FMT='IR'):
         lat=lat,
         start_time=start_time,
     )
+    # print(ctd)
+
     return ctd

@@ -68,6 +68,8 @@ def save_bot_files(data_path, save_path):
         coords=dict(
             profile=filename_list,
             level=np.arange(max_len),
+            latitude=lat_list,
+            longitude=lon_list,
         ),
         data_vars=dict(
             pressure=(["profile", "level"], press_list),
