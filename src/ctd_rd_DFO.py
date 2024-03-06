@@ -22,7 +22,6 @@ def ctd_rd_DFO(cnv_file, FMT='IR'):
 
     with open(cnv_file, 'r', errors="ignore") as fid:
         line = '*START'
-        print(cnv_file)
 
         while '*END OF HEADER' not in line:
             line = fid.readline()

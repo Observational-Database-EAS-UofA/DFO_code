@@ -2,7 +2,6 @@ from bot_rd_DFO import bot_rd_DFO
 from ctd_rd_DFO import ctd_rd_DFO
 from che_rd_DFO import che_rd_DFO
 from read_DFO_Water_Props_files import *
-from read_CHE_files import read_file
 import sys
 
 
@@ -41,7 +40,8 @@ def main():
 
 if __name__ == "__main__":
     # main()
-    runCHEFiles("../original_data", "ncfiles")
-    runCTDFiles("../original_data", "ncfiles")
+    # runCHEFiles("../original_data/2017-020-0094.che")
+    # runCHEFiles("../original_data", "ncfiles")
+    # runCTDFiles("../../original_data", "ncfiles")
     runBOTFiles("../original_data", "ncfiles")
 

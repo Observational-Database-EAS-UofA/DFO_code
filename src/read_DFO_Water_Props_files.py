@@ -48,6 +48,7 @@ def save_files(data_path, save_path, file_type):
 
     for filename in files:
         tempp = None
+        print(filename)
         match file_type:
             case ".bot":
                 tempp = bot_rd_DFO(filename)

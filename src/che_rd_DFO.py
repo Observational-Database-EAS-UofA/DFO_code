@@ -1,6 +1,4 @@
-import numpy as np
-import pandas as pd
-from shared.reader import read_table_vertically
+from src.shared.reader import read_table_vertically
 
 
 def che_rd_DFO(cnv_file, FMT='IR'):
@@ -22,7 +20,6 @@ def che_rd_DFO(cnv_file, FMT='IR'):
     salvar = None
 
     with open(cnv_file, 'r', errors="ignore") as fid:
-        print(cnv_file)
         line = '*START'
         m = 0
         while '*END OF HEADER' not in line:
