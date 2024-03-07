@@ -16,17 +16,16 @@ import pandas as pd
 #     3  100.1  -0.4492  53.2   0.311   6.12 267.0    0.1  28.5079  7   14  28.5155 0   6.776 0   8.0 0   27.3 0    1.45 0
 #     2  149.2  -0.3500  53.4   0.249   5.80 253.1    0.1  28.6228  4   13  28.6298 0   5.834 0   8.9 0   31.6 0    1.51 0
 #     1  170.3  -0.3256  52.3   0.256   5.71 249.1 4655.3  28.6395  1   21  28.6606 0   5.732 0   9.1 0   33.0 0    1.58 0
-def read_table_vertically(cnv_file, fid, m):
+def read_table_vertically(cnv_file, fid):
     # get the header
     with open(cnv_file, 'r', errors="ignore") as file:
         content = file.readlines()
     header_data_line = ''
-    i = m - 1
+    i = len(content) - 1
     while not all(char in content[i] for char in "!1-"):
         i -= 1
         header_data_line = content[i]
         header_data_line = header_data_line.lstrip("!")
-    file = fid.readlines()
     split_items = []
     line = header_data_line
     for item in header_data_line.split():
@@ -35,6 +34,7 @@ def read_table_vertically(cnv_file, fid, m):
         line = line.replace(to_be_replaced, " " * len(to_be_replaced), 1)
         split_items.append(index)
 
+    file = fid.readlines()
     data = []
     for i in range(len(split_items)):
         tmp = []

@@ -1,11 +1,8 @@
 import os
 import xarray as xr
 import numpy as np
-import pandas as pd
 
-from bot_rd_DFO import bot_rd_DFO
-from ctd_rd_DFO import ctd_rd_DFO
-from che_rd_DFO import che_rd_DFO
+from src.functions.rd_DFO import read_DFO
 
 
 def add_nan_to_data(data, max_length):
@@ -47,20 +44,7 @@ def save_files(data_path, save_path, file_type):
     netcdf_filename = ''
 
     for filename in files:
-        tempp = None
-        print(filename)
-        match file_type:
-            case ".bot":
-                tempp = bot_rd_DFO(filename)
-                netcdf_filename = "DFO_2022_bottles_RAW.nc"
-            case ".ctd":
-                tempp = ctd_rd_DFO(filename)
-                netcdf_filename = "DFO_2022_ctd_RAW.nc"
-            case ".che":
-                tempp = che_rd_DFO(filename)
-                netcdf_filename = "DFO_2022_che_RAW.nc"
-            case _:
-                print("wrong file type")
+        tempp = read_DFO(filename)
 
         filename_list.append(tempp['filename'])
         depth_list.append(tempp['depth'])
@@ -102,6 +86,16 @@ def save_files(data_path, save_path, file_type):
             station=(["profile"], station_list),
         )
     )
+
+    match file_type:
+        case ".bot":
+            netcdf_filename = "DFO_2022_bottles_RAW.nc"
+        case ".ctd":
+            netcdf_filename = "DFO_2022_ctd_RAW.nc"
+        case ".che":
+            netcdf_filename = "DFO_2022_che_RAW.nc"
+        case _:
+            print("wrong file type")
 
     os.chdir(base_directory)
     os.chdir(save_path)

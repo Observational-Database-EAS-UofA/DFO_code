@@ -1,9 +1,7 @@
-import numpy as np
-import pandas as pd
-import datetime
+from src.shared.reader import read_table_vertically
 
 
-def bot_rd_DFO(cnv_file, FMT='IR'):
+def read_DFO(cnv_file, FMT='IR'):
     header_str = ''
     mission = None
     agency = None
@@ -22,7 +20,9 @@ def bot_rd_DFO(cnv_file, FMT='IR'):
     salvar = None
 
     with open(cnv_file, 'r', errors="ignore") as fid:
+        print(cnv_file)
         line = '*START*'
+        already_entered = False
         while '*END OF HEADER' not in line:
             line = fid.readline()
             first_of_line = line.split(":")[0].strip()
@@ -30,11 +30,15 @@ def bot_rd_DFO(cnv_file, FMT='IR'):
             if 'NUMBER OF CHANNELS' == first_of_line:
                 no_channels = int(line.split(':')[1])
 
-            elif '$TABLE: CHANNELS' == line.strip():
+            elif '$TABLE: CHANNELS' == line.strip() and no_channels is not None and already_entered is False:
+                already_entered = True
                 line = fid.readline()
                 line = fid.readline()
                 for mm in range(no_channels):
-                    line = fid.readline().strip()
+                    line = fid.readline().strip().split()
+                    if ":" in line[1]:
+                        line = line[1].split(":")[0]
+
                     if 'Depth' in line:
                         depthvar = mm
                     elif 'Pressure' in line:
@@ -64,37 +68,31 @@ def bot_rd_DFO(cnv_file, FMT='IR'):
                 lat_deg = float(lat_str[0])
                 lat_min = float(lat_str[1])
                 lat = lat_deg + lat_min / 60
-                # lat = float('%.4f' % lat)
 
             elif 'LONGITUDE' == first_of_line:
                 lon_str = line.split(':')[1].strip().split()
                 lon_deg = float(lon_str[0])
                 lon_min = float(lon_str[1])
                 lon = -1 * (lon_deg + lon_min / 60)
-                # lon = float('%.4f' % lon)
 
             elif 'START TIME' == first_of_line:
                 start_time = line[30:].strip()
 
-        # Done reading header. Now read the data.
-        data = []
-        for line in fid:
-            data.append(list(map(float, line.split())))
+        data = read_table_vertically(cnv_file, fid)
 
         depth_list = []
         press_list = []
         temp_list = []
         sal_list = []
 
-        for row in data:
-            if depthvar is not None:
-                depth_list.append(row[depthvar])
-            if pressvar is not None:
-                press_list.append(row[pressvar])
-            if tempvar is not None:
-                temp_list.append(row[tempvar])
-            if salvar is not None:
-                sal_list.append(row[salvar])
+        if depthvar is not None:
+            depth_list = list(map(float, data.iloc[:, depthvar].values))
+        if pressvar is not None:
+            press_list = list(map(float, data.iloc[:, pressvar].values))
+        if tempvar is not None:
+            temp_list = list(map(float, data.iloc[:, tempvar].values))
+        if salvar is not None:
+            sal_list = list(map(float, data.iloc[:, salvar].values))
 
     ctd = dict(
         filename=cnv_file,
