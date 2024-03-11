@@ -26,8 +26,8 @@ if __name__ == "__main__":
 
     # run all files
     save_files("../original_data", "ncfiles", ".bot")
-    save_files("../original_data", "ncfiles", ".ctd")
+    # save_files("../original_data", "ncfiles", ".ctd")
     save_files("../original_data", "ncfiles", ".che")
 
     # run individual files
-    # print(read_DFO("../original_data/2006-018-0072.che"))
+    # print(read_DFO("../original_data/2013-006-0006.che"))

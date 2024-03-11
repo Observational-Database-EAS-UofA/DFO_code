@@ -1,4 +1,7 @@
+import numpy as np
+
 from src.shared.reader import read_table_vertically
+from datetime import datetime
 
 
 def read_DFO(cnv_file, FMT='IR'):
@@ -10,42 +13,50 @@ def read_DFO(cnv_file, FMT='IR'):
     station = None
     lat = None
     lon = None
+    number_of_records = None
+    water_depth = None
     start_time = None
+    serial_time = None
 
-    # Read the header.
     no_channels = None
     depthvar = None
     pressvar = None
     tempvar = None
     salvar = None
 
+    # Read the header.
     with open(cnv_file, 'r', errors="ignore") as fid:
         print(cnv_file)
         line = '*START*'
-        already_entered = False
+        already_entered_table_channels = False
         while '*END OF HEADER' not in line:
+            header_str += str(line)
             line = fid.readline()
             first_of_line = line.split(":")[0].strip()
-            header_str += line
             if 'NUMBER OF CHANNELS' == first_of_line:
                 no_channels = int(line.split(':')[1])
 
-            elif '$TABLE: CHANNELS' == line.strip() and no_channels is not None and already_entered is False:
-                already_entered = True
+            elif '$TABLE: CHANNELS' == line.strip() and no_channels is not None and already_entered_table_channels is False:
+                already_got_salinity = False
+                already_entered_table_channels = True
                 line = fid.readline()
                 line = fid.readline()
                 for mm in range(no_channels):
                     line = fid.readline().strip().split()
+                    old_line = line
                     if ":" in line[1]:
                         line = line[1].split(":")[0]
-
                     if 'Depth' in line:
                         depthvar = mm
                     elif 'Pressure' in line:
                         pressvar = mm
                     elif 'Temperature' in line:
                         tempvar = mm
-                    elif 'Salinity' in line:
+                    # prefer the 'Salinity' only
+                    elif old_line[1].startswith('Salinity') and old_line[1] != 'Salinity:Bottle':
+                        salvar = mm
+                        already_got_salinity = True
+                    elif 'Salinity' in line and already_got_salinity is False:
                         salvar = mm
 
             elif 'MISSION' == first_of_line:
@@ -68,15 +79,25 @@ def read_DFO(cnv_file, FMT='IR'):
                 lat_deg = float(lat_str[0])
                 lat_min = float(lat_str[1])
                 lat = lat_deg + lat_min / 60
+                lat = float(f'{lat: .4f}')
 
             elif 'LONGITUDE' == first_of_line:
                 lon_str = line.split(':')[1].strip().split()
                 lon_deg = float(lon_str[0])
                 lon_min = float(lon_str[1])
                 lon = -1 * (lon_deg + lon_min / 60)
+                lat = float(f'{lon: .4f}')
 
             elif 'START TIME' == first_of_line:
-                start_time = line[30:].strip()
+                datestr = line[30:].strip()
+                # datestr = datetime.strptime(datestr, "%Y/%m/%d %H:%M:%S.%f")
+                serial_time = datetime.strptime(datestr, "%Y/%m/%d %H:%M:%S.%f").timestamp()
+
+            elif 'NUMBER OF RECORDS' == first_of_line:
+                number_of_records = line.split(':')[1].strip()
+
+            elif 'WATER DEPTH' == first_of_line:
+                water_depth = line.split(':')[1].strip()
 
         data = read_table_vertically(cnv_file, fid)
 
@@ -97,6 +118,7 @@ def read_DFO(cnv_file, FMT='IR'):
     ctd = dict(
         filename=cnv_file,
         depth=depth_list,
+        header=header_str,
         press=press_list,
         temp=temp_list,
         psal=sal_list,
@@ -107,7 +129,10 @@ def read_DFO(cnv_file, FMT='IR'):
         station=station,
         lon=lon,
         lat=lat,
-        start_time=start_time,
+        number_of_records=number_of_records,
+        water_depth=water_depth,
+        datestr=datestr,
+        serial_time=serial_time,
     )
 
     return ctd
