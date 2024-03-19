@@ -18,7 +18,7 @@ def get_all_data(data_path, save_path, file_type):
 
     measurements_attrs = ['depth', 'press', 'temp', 'psal']
     string_attrs = ['chief_scientist', 'platform', 'instrument_type', 'orig_filename', 'orig_header', 'station_no',
-                    'datestr', 'time_type', 'timestamp', 'lat', 'lon', 'num_records', 'shallowest_depth',
+                    'datestr', 'timezone', 'timestamp', 'lat', 'lon', 'num_records', 'shallowest_depth',
                     'deepest_depth', 'bottom_depth', ]
     data_lists = {attr: [] for attr in string_attrs + measurements_attrs}
 
@@ -55,12 +55,12 @@ def get_all_data(data_path, save_path, file_type):
             orig_header=xr.DataArray(data_lists['orig_header'], dims=['profile']),
             station_no=xr.DataArray(data_lists['station_no'], dims=["profile"]),
             datestr=xr.DataArray(data_lists['datestr'], dims=["profile"]),
+            timezone=xr.DataArray(data_lists['timezone'], dims=["profile"]),
             parent_index=xr.DataArray(np.concatenate(parent_index), dims=["obs"]),
             num_records=xr.DataArray(data_lists['num_records'], dims=["profile"]),
             bottom_depth=xr.DataArray(data_lists['bottom_depth'], dims=["profile"]),
             shallowest_depth=xr.DataArray(data_lists['shallowest_depth'], dims=["profile"]),
             deepest_depth=xr.DataArray(data_lists['deepest_depth'], dims=["profile"]),
-            time_type=xr.DataArray(data_lists['time_type'], dims=["profile"]),
 
             # measurements
             depth=xr.DataArray(data_lists['depth'], dims=['obs'],

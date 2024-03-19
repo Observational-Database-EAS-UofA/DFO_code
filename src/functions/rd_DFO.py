@@ -17,7 +17,7 @@ def read_DFO(cnv_file, FMT='IR'):
     shallowest_depth = None
     deepest_depth = None
     datestr = None
-    time_type = None
+    timezone = None
     timestamp = None
 
     no_channels = None
@@ -95,8 +95,8 @@ def read_DFO(cnv_file, FMT='IR'):
             elif 'START TIME' == first_of_line:
                 first_colon = line.find(':')
                 full_date = line[first_colon + 1:].strip()
-                time_type = full_date.split()[0]
-                datestr = full_date.replace(time_type, '').strip()
+                timezone = full_date.split()[0]
+                datestr = full_date.replace(timezone, '').strip()
                 # datestr = datetime.strptime(datestr, "%Y/%m/%d %H:%M:%S.%f")
                 timestamp = datetime.strptime(datestr, "%Y/%m/%d %H:%M:%S.%f").timestamp()
 
@@ -149,9 +149,7 @@ def read_DFO(cnv_file, FMT='IR'):
         press=press_list,
         temp=temp_list,
         psal=sal_list,
-        # mission=mission,
-        # agency=agency,
-        time_type=time_type,
+        timezone=timezone,
     )
 
     return ctd
