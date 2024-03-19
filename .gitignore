@@ -1,4 +1,5 @@
-env/
+venv/
 ncfiles/
 __pycache__/
 .idea/
+original_data/

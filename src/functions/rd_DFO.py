@@ -1,6 +1,4 @@
-import numpy as np
-
-from src.shared.reader import read_table_vertically
+from src.functions.reader import read_table_vertically
 from datetime import datetime
 
 
@@ -9,14 +7,18 @@ def read_DFO(cnv_file, FMT='IR'):
     mission = None
     agency = None
     platform = None
-    type_ = None
-    station = None
+    scientist = None
+    instrument_type = None
+    station_no = None
     lat = None
     lon = None
     number_of_records = None
     water_depth = None
-    start_time = None
-    serial_time = None
+    shallowest_depth = None
+    deepest_depth = None
+    datestr = None
+    time_type = None
+    timestamp = None
 
     no_channels = None
     depthvar = None
@@ -26,7 +28,6 @@ def read_DFO(cnv_file, FMT='IR'):
 
     # Read the header.
     with open(cnv_file, 'r', errors="ignore") as fid:
-        print(cnv_file)
         line = '*START*'
         already_entered_table_channels = False
         while '*END OF HEADER' not in line:
@@ -65,14 +66,17 @@ def read_DFO(cnv_file, FMT='IR'):
             elif 'AGENCY' == first_of_line:
                 agency = line.split(':')[1].strip()
 
-            elif 'PLATFORM' == first_of_line or 'SCIENTIST' == first_of_line or 'PROJECT' == first_of_line:
+            elif 'PLATFORM' == first_of_line or 'PROJECT' == first_of_line:
                 platform = line.split(':')[1].strip()
 
+            elif 'SCIENTIST' == first_of_line:
+                scientist = line.split(':')[1].strip()
+
             elif 'TYPE' == first_of_line:
-                type_ = line.split(':')[1].strip()
+                instrument_type = line.split(':')[1].strip()
 
             elif 'STATION' == first_of_line:
-                station = line.split(':')[1].strip()
+                station_no = line.split(':')[1].strip()
 
             elif 'LATITUDE' == first_of_line:
                 lat_str = line.split(':')[1].strip().split()
@@ -89,9 +93,12 @@ def read_DFO(cnv_file, FMT='IR'):
                 lat = float(f'{lon: .4f}')
 
             elif 'START TIME' == first_of_line:
-                datestr = line[30:].strip()
+                first_colon = line.find(':')
+                full_date = line[first_colon + 1:].strip()
+                time_type = full_date.split()[0]
+                datestr = full_date.replace(time_type, '').strip()
                 # datestr = datetime.strptime(datestr, "%Y/%m/%d %H:%M:%S.%f")
-                serial_time = datetime.strptime(datestr, "%Y/%m/%d %H:%M:%S.%f").timestamp()
+                timestamp = datetime.strptime(datestr, "%Y/%m/%d %H:%M:%S.%f").timestamp()
 
             elif 'NUMBER OF RECORDS' == first_of_line:
                 number_of_records = line.split(':')[1].strip()
@@ -115,24 +122,36 @@ def read_DFO(cnv_file, FMT='IR'):
         if salvar is not None:
             sal_list = list(map(float, data.iloc[:, salvar].values))
 
+    if len(depth_list) > 0:
+        shallowest_depth = depth_list[0]
+        i = 1
+        while not shallowest_depth > 0 and len(depth_list) > 1:
+            shallowest_depth = depth_list[i]
+            i += 1
+        deepest_depth = depth_list[-1]
+
     ctd = dict(
-        filename=cnv_file,
+        chief_scientist=scientist,
+        platform=platform,
+        instrument_type=instrument_type,
+        orig_filename=cnv_file,
+        orig_header=header_str,
+        station_no=station_no,
+        datestr=datestr,
+        timestamp=timestamp,
+        lat=lat,
+        lon=lon,
+        num_records=number_of_records,
+        shallowest_depth=shallowest_depth,
+        deepest_depth=deepest_depth,
+        bottom_depth=water_depth,
         depth=depth_list,
-        header=header_str,
         press=press_list,
         temp=temp_list,
         psal=sal_list,
-        mission=mission,
-        agency=agency,
-        platform=platform,
-        type=type_,
-        station=station,
-        lon=lon,
-        lat=lat,
-        number_of_records=number_of_records,
-        water_depth=water_depth,
-        datestr=datestr,
-        serial_time=serial_time,
+        # mission=mission,
+        # agency=agency,
+        time_type=time_type,
     )
 
     return ctd
