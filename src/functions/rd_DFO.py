@@ -97,8 +97,9 @@ def read_DFO(cnv_file, FMT='IR'):
                 full_date = line[first_colon + 1:].strip()
                 timezone = full_date.split()[0]
                 datestr = full_date.replace(timezone, '').strip()
-                # datestr = datetime.strptime(datestr, "%Y/%m/%d %H:%M:%S.%f")
-                timestamp = datetime.strptime(datestr, "%Y/%m/%d %H:%M:%S.%f").timestamp()
+                datestr = datetime.strptime(datestr, "%Y/%m/%d %H:%M:%S.%f")
+                timestamp = datestr.timestamp()
+                datestr = datetime.strftime(datestr, "%Y/%m/%d %H:%M:%S")
 
             elif 'NUMBER OF RECORDS' == first_of_line:
                 number_of_records = line.split(':')[1].strip()

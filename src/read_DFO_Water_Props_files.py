@@ -38,7 +38,7 @@ def get_all_data(data_path, save_path, file_type):
             data_lists[attr].append(prov[attr])
         create_parent_index(prov, parent_index, i)
 
-    os.chdir("../")
+    os.chdir("../../")
     dataset_name = os.path.basename(os.getcwd())
 
     ds = xr.Dataset(

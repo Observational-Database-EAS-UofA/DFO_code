@@ -26,7 +26,7 @@ if __name__ == "__main__":
     # run all files
     get_all_data("../original_data", "ncfiles_raw", ".bot")
     # get_all_data("../original_data", "ncfiles_raw", ".ctd")
-    get_all_data("../original_data", "ncfiles_raw", ".che")
+    # get_all_data("../original_data", "ncfiles_raw", ".che")
 
     # run individual files
     # print(read_DFO("../original_data/2013-006-0006.che"))
