@@ -45,6 +45,5 @@ def read_table_vertically(cnv_file, fid):
                 tmp.append(li[split_items[i]:])
         data.append(tmp)
 
-    # print(data)
     data = pd.DataFrame.transpose(pd.DataFrame(data))
     return data

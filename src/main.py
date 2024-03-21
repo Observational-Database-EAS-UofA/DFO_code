@@ -17,16 +17,19 @@ def main():
     if not os.path.isdir(save_path):
         print(f"Error: '{save_path}' is not a valid directory.")
         sys.exit(1)
-    get_all_data(data_path, save_path)
+    get_raw_data(data_path, save_path)
 
 
 if __name__ == "__main__":
     # main()
 
-    # run all files
-    get_all_data("../original_data", "ncfiles_raw", ".bot")
-    # get_all_data("../original_data", "ncfiles_raw", ".ctd")
-    # get_all_data("../original_data", "ncfiles_raw", ".che")
+    original_data_path = '/home/novaisc/workspace/obs_database/AW_CAA/CTD_DATA/DFO_IOS_2022/original_data'
+    save_path = '/home/novaisc/workspace/obs_database/AW_CAA/CTD_DATA/DFO_IOS_2022/python_processing/ncfiles_raw'
+
+    # read_DFO('../../original_data/1989-070-0016.bot')
+
+    for file_type in ['.bot', '.che', ]:
+        get_raw_data(original_data_path, save_path, file_type=file_type)
 
     # run individual files
     # print(read_DFO("../original_data/2013-006-0006.che"))

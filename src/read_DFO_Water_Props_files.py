@@ -6,7 +6,7 @@ import datetime as dt
 from src.functions.rd_DFO import read_DFO
 
 
-def get_all_data(data_path, save_path, file_type):
+def get_raw_data(data_path, save_path, file_type):
     base_directory = os.getcwd()
     directory = data_path
     os.chdir(directory)
@@ -17,8 +17,8 @@ def get_all_data(data_path, save_path, file_type):
         files = [f for f in os.listdir() if f.endswith(file_type)]
 
     measurements_attrs = ['depth', 'press', 'temp', 'psal']
-    string_attrs = ['chief_scientist', 'platform', 'instrument_type', 'orig_filename', 'orig_header', 'station_no',
-                    'datestr', 'timezone', 'timestamp', 'lat', 'lon', 'num_records', 'shallowest_depth',
+    string_attrs = ['cruise_name', 'chief_scientist', 'platform', 'instrument_type', 'orig_filename', 'orig_header',
+                    'station_no', 'datestr', 'timezone', 'timestamp', 'lat', 'lon', 'num_records', 'shallowest_depth',
                     'deepest_depth', 'bottom_depth', ]
     data_lists = {attr: [] for attr in string_attrs + measurements_attrs}
 
@@ -38,51 +38,42 @@ def get_all_data(data_path, save_path, file_type):
             data_lists[attr].append(prov[attr])
         create_parent_index(prov, parent_index, i)
 
-    os.chdir("../../")
-    dataset_name = os.path.basename(os.getcwd())
+    os.chdir("../")
+    ds = create_dataset(data_lists, parent_index, string_attrs)
+    save_file(file_type, base_directory, save_path, ds)
 
+
+def create_dataset(data_lists, parent_index, string_attrs):
+    dataset_name = os.path.basename(os.getcwd())
     ds = xr.Dataset(
         coords=dict(
             timestamp=(['profile'], data_lists['timestamp']),
             lon=(['profile'], data_lists['lon']),
             lat=(['profile'], data_lists['lat']),
         ),
-        data_vars=dict(
-            chief_scientist=xr.DataArray(data_lists['chief_scientist'], dims=["profile"]),
-            platform=xr.DataArray(data_lists['platform'], dims=["profile"]),
-            instrument_type=xr.DataArray(data_lists['instrument_type'], dims=["profile"]),
-            orig_filename=xr.DataArray(data_lists['orig_filename'], dims=['profile']),
-            orig_header=xr.DataArray(data_lists['orig_header'], dims=['profile']),
-            station_no=xr.DataArray(data_lists['station_no'], dims=["profile"]),
-            datestr=xr.DataArray(data_lists['datestr'], dims=["profile"]),
-            timezone=xr.DataArray(data_lists['timezone'], dims=["profile"]),
-            parent_index=xr.DataArray(np.concatenate(parent_index), dims=["obs"]),
-            num_records=xr.DataArray(data_lists['num_records'], dims=["profile"]),
-            bottom_depth=xr.DataArray(data_lists['bottom_depth'], dims=["profile"]),
-            shallowest_depth=xr.DataArray(data_lists['shallowest_depth'], dims=["profile"]),
-            deepest_depth=xr.DataArray(data_lists['deepest_depth'], dims=["profile"]),
-
-            # measurements
-            depth=xr.DataArray(data_lists['depth'], dims=['obs'],
-                               attrs=dict(long_name="depth", unit="m", coordinates="time lon lat z")),
-            press=xr.DataArray(data_lists['press'], dims=['obs'],
-                               attrs=dict(long_name="press", unit="dbar", coordinates="time lon lat z")),
-            temp=xr.DataArray(data_lists['temp'], dims=['obs'],
-                              attrs=dict(long_name="temp", unit="oC", coordinates="time lon lat z")),
-            psal=xr.DataArray(data_lists['psal'], dims=['obs'],
-                              attrs=dict(long_name="psal (psu)", unit="psu", coordinates="time lon lat z")),
-        ),
+        data_vars=dict({**{attr: xr.DataArray(data_lists[attr], dims=['profile']) for attr in string_attrs if
+                           attr not in ['timestamp', 'lon', 'lat']}, },
+                       parent_index=xr.DataArray(np.concatenate(parent_index), dims=['obs']),
+                       # measurements
+                       depth=xr.DataArray(data_lists['depth'], dims=['obs'],
+                                          attrs=dict(long_name="depth", unit="m", coordinates="time lon lat z")),
+                       press=xr.DataArray(data_lists['press'], dims=['obs'],
+                                          attrs=dict(long_name="press", unit="dbar", coordinates="time lon lat z")),
+                       temp=xr.DataArray(data_lists['temp'], dims=['obs'],
+                                         attrs=dict(long_name="temp", unit="oC", coordinates="time lon lat z")),
+                       psal=xr.DataArray(data_lists['psal'], dims=['obs'],
+                                         attrs=dict(long_name="psal (psu)", unit="psu", coordinates="time lon lat z")),
+                       ),
         attrs=dict(
             dataset_name=dataset_name,
             creation_date=str(dt.datetime.now().strftime("%Y-%m-%d %H:%M")),
             feature_type="profile"
-        )
+        ),
     )
 
     print("-" * 100)
     print(ds)
-
-    save_file(file_type, base_directory, save_path, ds)
+    return ds
 
 
 def save_file(file_type, base_directory, save_path, ds):
@@ -99,10 +90,10 @@ def save_file(file_type, base_directory, save_path, ds):
 
     os.chdir(base_directory)
     os.chdir("../")
-    if save_path not in os.listdir():
+    if not os.path.isdir(save_path):
         os.mkdir(save_path)
     os.chdir(save_path)
-    ds.to_netcdf(netcdf_filename)
+    ds.to_netcdf(netcdf_filename, unlimited_dims={'obs': True})
     os.chdir(base_directory)
 
 

@@ -4,8 +4,7 @@ from datetime import datetime
 
 def read_DFO(cnv_file, FMT='IR'):
     header_str = ''
-    mission = None
-    agency = None
+    project = None
     platform = None
     scientist = None
     instrument_type = None
@@ -60,38 +59,34 @@ def read_DFO(cnv_file, FMT='IR'):
                     elif 'Salinity' in line and already_got_salinity is False:
                         salvar = mm
 
-            elif 'MISSION' == first_of_line:
-                mission = line.split(':')[1].strip()
-
-            elif 'AGENCY' == first_of_line:
-                agency = line.split(':')[1].strip()
-
-            elif 'PLATFORM' == first_of_line or 'PROJECT' == first_of_line:
+            elif 'PLATFORM' == first_of_line:
                 platform = line.split(':')[1].strip()
-
+            elif 'PROJECT' == first_of_line:
+                project = line.split(':')[1].strip()
             elif 'SCIENTIST' == first_of_line:
                 scientist = line.split(':')[1].strip()
-
             elif 'TYPE' == first_of_line:
                 instrument_type = line.split(':')[1].strip()
-
             elif 'STATION' == first_of_line:
                 station_no = line.split(':')[1].strip()
-
             elif 'LATITUDE' == first_of_line:
                 lat_str = line.split(':')[1].strip().split()
                 lat_deg = float(lat_str[0])
                 lat_min = float(lat_str[1])
                 lat = lat_deg + lat_min / 60
                 lat = float(f'{lat: .4f}')
-
             elif 'LONGITUDE' == first_of_line:
                 lon_str = line.split(':')[1].strip().split()
                 lon_deg = float(lon_str[0])
                 lon_min = float(lon_str[1])
-                lon = -1 * (lon_deg + lon_min / 60)
-                lat = float(f'{lon: .4f}')
-
+                lon_direction = lon_str[2]
+                if lon_direction == 'W':
+                    lon = -1 * (lon_deg + lon_min / 60)
+                elif lon_direction == 'E':
+                    lon = lon_deg + lon_min / 60
+                else:
+                    print("deu merda")
+                lon = float(f'{lon: .4f}')
             elif 'START TIME' == first_of_line:
                 first_colon = line.find(':')
                 full_date = line[first_colon + 1:].strip()
@@ -100,10 +95,8 @@ def read_DFO(cnv_file, FMT='IR'):
                 datestr = datetime.strptime(datestr, "%Y/%m/%d %H:%M:%S.%f")
                 timestamp = datestr.timestamp()
                 datestr = datetime.strftime(datestr, "%Y/%m/%d %H:%M:%S")
-
             elif 'NUMBER OF RECORDS' == first_of_line:
                 number_of_records = line.split(':')[1].strip()
-
             elif 'WATER DEPTH' == first_of_line:
                 water_depth = line.split(':')[1].strip()
 
@@ -132,6 +125,7 @@ def read_DFO(cnv_file, FMT='IR'):
         deepest_depth = depth_list[-1]
 
     ctd = dict(
+        cruise_name=project,
         chief_scientist=scientist,
         platform=platform,
         instrument_type=instrument_type,
@@ -139,6 +133,7 @@ def read_DFO(cnv_file, FMT='IR'):
         orig_header=header_str,
         station_no=station_no,
         datestr=datestr,
+        timezone=timezone,
         timestamp=timestamp,
         lat=lat,
         lon=lon,
@@ -150,7 +145,6 @@ def read_DFO(cnv_file, FMT='IR'):
         press=press_list,
         temp=temp_list,
         psal=sal_list,
-        timezone=timezone,
     )
 
     return ctd
