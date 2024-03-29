@@ -24,12 +24,7 @@ if __name__ == "__main__":
     # main()
 
     original_data_path = '/home/novaisc/workspace/obs_database/AW_CAA/CTD_DATA/DFO_IOS_2022/original_data'
-    save_path = '/home/novaisc/workspace/obs_database/AW_CAA/CTD_DATA/DFO_IOS_2022/python_processing/ncfiles_raw'
+    save_path = '/home/novaisc/workspace/obs_database/AW_CAA/CTD_DATA/DFO_IOS_2022/ncfiles_raw'
 
-    # read_DFO('../../original_data/1989-070-0016.bot')
-
-    for file_type in ['.bot', '.che', ]:
+    for file_type in ['.bot', '.che', '.ctd']:
         get_raw_data(original_data_path, save_path, file_type=file_type)
-
-    # run individual files
-    # print(read_DFO("../original_data/2013-006-0006.che"))
