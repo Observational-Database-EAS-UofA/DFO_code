@@ -1,4 +1,4 @@
-from src.functions.reader import read_table_vertically
+from functions.reader import read_table_vertically
 from datetime import datetime
 
 
