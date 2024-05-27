@@ -28,16 +28,14 @@ class DFOReader:
 
         The method reads files, extracts data, and organizes it into lists for creating an Xarray Dataset.
         """
+
+        print(f"running {file_type} file")
         base_directory = os.getcwd()
         directory = data_path
         os.chdir(directory)
 
         if file_type == ".ctd":
-            files = [
-                f
-                for f in os.listdir()
-                if (f.endswith(".ctd") and (("AT" not in f) and ("WC" not in f)))
-            ]
+            files = [f for f in os.listdir() if (f.endswith(".ctd") and (("AT" not in f) and ("WC" not in f)))]
         else:
             files = [f for f in os.listdir() if f.endswith(file_type)]
 
@@ -59,36 +57,37 @@ class DFOReader:
             "shallowest_depth",
             "deepest_depth",
             "bottom_depth",
+            "depth_row_size",
+            "press_row_size",
+            "temp_row_size",
+            "psal_row_size",
         ]
         data_lists = {attr: [] for attr in string_attrs + measurements_attrs}
 
-        parent_index = []
-
         for i, filename in enumerate(tqdm(files)):
-            prov = read_DFO(filename)
+            raw_data_dict = read_DFO(filename)
             for attr in measurements_attrs:
-                if attr == "depth" and len(prov["depth"]) == 0:
-                    data_lists[attr].extend([np.nan] * len(prov["press"]))
-                elif attr == "press" and len(prov["press"]) == 0:
-                    data_lists[attr].extend([np.nan] * len(prov["depth"]))
-                else:
-                    data_lists[attr].extend(prov[attr])
+                data_lists[attr].extend(raw_data_dict[attr])
 
             for attr in string_attrs:
-                data_lists[attr].append(prov[attr])
-            self.create_parent_index(prov, parent_index, i)
+                if attr not in ["depth_row_size", "press_row_size", "temp_row_size", "psal_row_size"]:
+                    data_lists[attr].append(raw_data_dict[attr])
+            data_lists["depth_row_size"].append(len(raw_data_dict["depth"]))
+            data_lists["press_row_size"].append(len(raw_data_dict["press"]))
+            data_lists["temp_row_size"].append(len(raw_data_dict["temp"]))
+            data_lists["psal_row_size"].append(len(raw_data_dict["psal"]))
 
         os.chdir("../")
-        ds = self.create_dataset(data_lists, parent_index, string_attrs)
+        ds = self.create_dataset(data_lists, string_attrs)
         self.save_file(file_type, base_directory, save_path, ds)
+        print(f"{file_type} done.")
 
-    def create_dataset(self, data_lists, parent_index, string_attrs):
+    def create_dataset(self, data_lists, string_attrs):
         """
         Creates an Xarray Dataset from the processed data.
 
         Parameters:
         - data_lists: Dictionary containing lists of data for each attribute.
-        - parent_index: List of parent-child indices for the data.
         - string_attrs: List of string attributes to include in the Dataset.
 
         Returns:
@@ -108,35 +107,26 @@ class DFOReader:
                         if attr not in ["timestamp", "lon", "lat"]
                     },
                 },
-                parent_index=xr.DataArray(np.concatenate(parent_index), dims=["obs"]),
                 # measurements
                 depth=xr.DataArray(
                     data_lists["depth"],
-                    dims=["obs"],
-                    attrs=dict(
-                        long_name="depth", unit="m", coordinates="time lon lat z"
-                    ),
+                    dims=["depth_obs"],
+                    attrs=dict(long_name="depth", unit="m", coordinates="time lon lat z"),
                 ),
                 press=xr.DataArray(
                     data_lists["press"],
-                    dims=["obs"],
-                    attrs=dict(
-                        long_name="press", unit="dbar", coordinates="time lon lat z"
-                    ),
+                    dims=["press_obs"],
+                    attrs=dict(long_name="press", unit="dbar", coordinates="time lon lat z"),
                 ),
                 temp=xr.DataArray(
                     data_lists["temp"],
-                    dims=["obs"],
-                    attrs=dict(
-                        long_name="temp", unit="oC", coordinates="time lon lat z"
-                    ),
+                    dims=["temp_obs"],
+                    attrs=dict(long_name="temp", unit="oC", coordinates="time lon lat z"),
                 ),
                 psal=xr.DataArray(
                     data_lists["psal"],
-                    dims=["obs"],
-                    attrs=dict(
-                        long_name="psal (psu)", unit="psu", coordinates="time lon lat z"
-                    ),
+                    dims=["psal_obs"],
+                    attrs=dict(long_name="psal (psu)", unit="psu", coordinates="time lon lat z"),
                 ),
             ),
             attrs=dict(
@@ -168,10 +158,6 @@ class DFOReader:
         os.chdir(save_path)
         ds.to_netcdf(netcdf_filename, unlimited_dims={"obs": True})
         os.chdir(base_directory)
-
-    def create_parent_index(self, data, parent_index, index):
-        size = max(len(data["press"]), len(data["temp"]), len(data["depth"]))
-        parent_index.append([index] * size)
 
 
 def main(data_path, save_path):
