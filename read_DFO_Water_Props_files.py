@@ -64,7 +64,7 @@ class DFOReader:
         ]
         data_lists = {attr: [] for attr in string_attrs + measurements_attrs}
 
-        for i, filename in enumerate(tqdm(files)):
+        for i, filename in enumerate(tqdm(files, colour="GREEN")):
             raw_data_dict = read_DFO(filename)
             for attr in measurements_attrs:
                 data_lists[attr].extend(raw_data_dict[attr])
@@ -156,7 +156,7 @@ class DFOReader:
         if not os.path.isdir(save_path):
             os.mkdir(save_path)
         os.chdir(save_path)
-        ds.to_netcdf(netcdf_filename, unlimited_dims={"obs": True})
+        ds.to_netcdf(netcdf_filename)
         os.chdir(base_directory)
 
 
