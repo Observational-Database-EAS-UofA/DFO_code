@@ -78,7 +78,7 @@ def read_DFO(cnv_file, FMT="IR"):
                 lat_deg = float(lat_str[0])
                 lat_min = float(lat_str[1])
                 lat = lat_deg + lat_min / 60
-                if (lat_str[2] == "N" and lat < 0) or (lat_str[2] == "S" and lat > 0):
+                if lat_str[2] == "S":
                     lat = -lat
                 elif lat_str[2] not in ["N", "S"]:
                     raise ValueError(f"lat signal not N or S!, it is: {lat_str[2]}")
@@ -89,7 +89,7 @@ def read_DFO(cnv_file, FMT="IR"):
                 lon_min = float(lon_str[1])
                 lon_direction = lon_str[2]
                 lon = lon_deg + lon_min / 60
-                if (lon_direction == "W" and lon > 0) or (lon_direction == "E" and lon < 0):
+                if lon_direction == "W":
                     lon = -lon
                 elif lon_direction not in ["E", "W"]:
                     raise ValueError(f"lon signal not W or E!, it is: {lon_direction}")
