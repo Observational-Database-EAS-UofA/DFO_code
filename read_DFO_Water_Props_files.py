@@ -6,10 +6,8 @@ data, organizing it into an Xarray Dataset, and saving the Dataset as a NetCDF f
 
 import os
 import xarray as xr
-import numpy as np
 import datetime as dt
 from tqdm import tqdm
-import sys
 from functions.rd_DFO import read_DFO
 
 
@@ -105,7 +103,7 @@ class DFOReader:
                         attr: xr.DataArray(data_lists[attr], dims=["profile"])
                         for attr in string_attrs
                         if attr not in ["timestamp", "lon", "lat"]
-                    },
+                    }
                 },
                 # measurements
                 depth=xr.DataArray(

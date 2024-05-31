@@ -2,8 +2,8 @@ from functions.reader import read_table_vertically
 from datetime import datetime
 
 
-def read_DFO(cnv_file, FMT='IR'):
-    header_str = ''
+def read_DFO(cnv_file, FMT="IR"):
+    header_str = ""
     project = None
     platform = None
     scientist = None
@@ -26,17 +26,21 @@ def read_DFO(cnv_file, FMT='IR'):
     salvar = None
 
     # Read the header.
-    with open(cnv_file, 'r', errors="ignore") as fid:
-        line = '*START*'
+    with open(cnv_file, "r", errors="ignore") as fid:
+        line = "*START*"
         already_entered_table_channels = False
-        while '*END OF HEADER' not in line:
+        while "*END OF HEADER" not in line:
             header_str += str(line)
             line = fid.readline()
             first_of_line = line.split(":")[0].strip()
-            if 'NUMBER OF CHANNELS' == first_of_line:
-                no_channels = int(line.split(':')[1])
+            if "NUMBER OF CHANNELS" == first_of_line:
+                no_channels = int(line.split(":")[1])
 
-            elif '$TABLE: CHANNELS' == line.strip() and no_channels is not None and already_entered_table_channels is False:
+            elif (
+                "$TABLE: CHANNELS" == line.strip()
+                and no_channels is not None
+                and already_entered_table_channels is False
+            ):
                 already_got_salinity = False
                 already_entered_table_channels = True
                 line = fid.readline()
@@ -46,59 +50,62 @@ def read_DFO(cnv_file, FMT='IR'):
                     old_line = line
                     if ":" in line[1]:
                         line = line[1].split(":")[0]
-                    if 'Depth' in line:
+                    if "Depth" in line:
                         depthvar = mm
-                    elif 'Pressure' in line:
+                    elif "Pressure" in line:
                         pressvar = mm
-                    elif 'Temperature' in line:
+                    elif "Temperature" in line:
                         tempvar = mm
                     # prefer the 'Salinity' only
-                    elif old_line[1].startswith('Salinity') and old_line[1] != 'Salinity:Bottle':
+                    elif old_line[1].startswith("Salinity") and old_line[1] != "Salinity:Bottle":
                         salvar = mm
                         already_got_salinity = True
-                    elif 'Salinity' in line and already_got_salinity is False:
+                    elif "Salinity" in line and already_got_salinity is False:
                         salvar = mm
 
-            elif 'PLATFORM' == first_of_line:
-                platform = line.split(':')[1].strip()
-            elif 'PROJECT' == first_of_line:
-                project = line.split(':')[1].strip()
-            elif 'SCIENTIST' == first_of_line:
-                scientist = line.split(':')[1].strip()
-            elif 'TYPE' == first_of_line:
-                instrument_type = line.split(':')[1].strip()
-            elif 'STATION' == first_of_line:
-                station_no = line.split(':')[1].strip()
-            elif 'LATITUDE' == first_of_line:
-                lat_str = line.split(':')[1].strip().split()
+            elif "PLATFORM" == first_of_line:
+                platform = line.split(":")[1].strip()
+            elif "PROJECT" == first_of_line:
+                project = line.split(":")[1].strip()
+            elif "SCIENTIST" == first_of_line:
+                scientist = line.split(":")[1].strip()
+            elif "TYPE" == first_of_line:
+                instrument_type = line.split(":")[1].strip()
+            elif "STATION" == first_of_line:
+                station_no = line.split(":")[1].strip()
+            elif "LATITUDE" == first_of_line:
+                lat_str = line.split(":")[1].strip().split()
                 lat_deg = float(lat_str[0])
                 lat_min = float(lat_str[1])
                 lat = lat_deg + lat_min / 60
-                lat = float(f'{lat: .4f}')
-            elif 'LONGITUDE' == first_of_line:
-                lon_str = line.split(':')[1].strip().split()
+                if (lat_str[2] == "N" and lat < 0) or (lat_str[2] == "S" and lat > 0):
+                    lat = -lat
+                elif lat_str[2] not in ["N", "S"]:
+                    raise ValueError(f"lat signal not N or S!, it is: {lat_str[2]}")
+                lat = float(f"{lat: .4f}")
+            elif "LONGITUDE" == first_of_line:
+                lon_str = line.split(":")[1].strip().split()
                 lon_deg = float(lon_str[0])
                 lon_min = float(lon_str[1])
                 lon_direction = lon_str[2]
-                if lon_direction == 'W':
-                    lon = -1 * (lon_deg + lon_min / 60)
-                elif lon_direction == 'E':
-                    lon = lon_deg + lon_min / 60
-                else:
-                    print("deu merda")
-                lon = float(f'{lon: .4f}')
-            elif 'START TIME' == first_of_line:
-                first_colon = line.find(':')
-                full_date = line[first_colon + 1:].strip()
+                lon = lon_deg + lon_min / 60
+                if (lon_direction == "W" and lon > 0) or (lon_direction == "E" and lon < 0):
+                    lon = -lon
+                elif lon_direction not in ["E", "W"]:
+                    raise ValueError(f"lon signal not W or E!, it is: {lon_direction}")
+                lon = float(f"{lon: .4f}")
+            elif "START TIME" == first_of_line:
+                first_colon = line.find(":")
+                full_date = line[first_colon + 1 :].strip()
                 timezone = full_date.split()[0]
-                datestr = full_date.replace(timezone, '').strip()
+                datestr = full_date.replace(timezone, "").strip()
                 datestr = datetime.strptime(datestr, "%Y/%m/%d %H:%M:%S.%f")
                 timestamp = datestr.timestamp()
                 datestr = datetime.strftime(datestr, "%Y/%m/%d %H:%M:%S")
-            elif 'NUMBER OF RECORDS' == first_of_line:
-                number_of_records = line.split(':')[1].strip()
-            elif 'WATER DEPTH' == first_of_line:
-                water_depth = line.split(':')[1].strip()
+            elif "NUMBER OF RECORDS" == first_of_line:
+                number_of_records = line.split(":")[1].strip()
+            elif "WATER DEPTH" == first_of_line:
+                water_depth = line.split(":")[1].strip()
 
         data = read_table_vertically(cnv_file, fid)
 
