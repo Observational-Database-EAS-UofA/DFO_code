@@ -136,7 +136,16 @@ class DFOReader:
 
         return ds
 
-    def save_file(self, file_type, base_directory, save_path, ds):
+    def save_file(self, file_type: str, base_directory: str, save_path: str, ds: xr.Dataset):
+        """
+        Save the data as a NetCDF file.
+
+        Parameters:
+        - file_type: type of the file. It could be '.bot', '.ctd'  or '.che'.
+        - base_directory: root directory
+        - save_path: path to save the file
+        - ds: Xarray dataset
+        """
         print(f"saving {file_type} file... it may take a few minutes.")
         netcdf_filename = ""
         match file_type:
